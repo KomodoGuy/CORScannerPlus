@@ -26,6 +26,7 @@ class CORSCheck:
         self.url = url
         self.cfg = cfg
         self.timeout = cfg["timeout"]
+        self.methods = ["GET", "POST"]
         self.all_results = []
         if cfg["headers"] != None:
             self.headers = cfg["headers"]
@@ -36,7 +37,7 @@ class CORSCheck:
                 "https": cfg["proxy"],
             }
         
-    def send_req(self, url, origin):
+    def send_req(self, url, origin, method):
         try:
 
             headers = {
@@ -51,7 +52,7 @@ class CORSCheck:
                 headers.update(self.headers)
 
             # self-signed cert OK, follow redirections
-            resp = requests.get(self.url, timeout=self.timeout, headers=headers,
+            resp = requests.request(method,self.url, timeout=self.timeout, headers=headers,
                 verify=False, allow_redirects=True, proxies=self.proxies)
 
             # remove cross-domain redirections, which may cause false results
@@ -72,8 +73,9 @@ class CORSCheck:
             (k.lower(), v) for k, v in iteritems(resp.headers))
         return resp_headers
 
-    def check_cors_policy(self, test_module_name,test_origin,test_url):
-        resp = self.send_req(self.url, test_origin)
+    def check_cors_policy(self, test_module_name,test_origin,test_url, method):
+        resp = self.send_req(self.url, test_origin, method)
+
         resp_headers = self.get_resp_headers(resp)
         status_code = resp.status_code if resp is not None else None
 
@@ -101,12 +103,13 @@ class CORSCheck:
                 "type": test_module_name,
                 "credentials": credentials,
                 "origin": test_origin,
-                "status_code" : status_code
+                "status_code" : status_code,
+                "method" : method
             }
         return msg
 
-    def is_cors_permissive(self,test_module_name,test_origin,test_url):
-        msg = self.check_cors_policy(test_module_name,test_origin,test_url)
+    def is_cors_permissive(self,test_module_name,test_origin,test_url,method="GET"):
+        msg = self.check_cors_policy(test_module_name,test_origin,test_url,method)
 
         if msg != None:
             self.cfg["logger"].warning(msg)
@@ -114,7 +117,7 @@ class CORSCheck:
             self.all_results.append(msg)
             return True
 
-        self.cfg["logger"].info("nothing found for {url: %s, origin: %s, type: %s}" % (test_url, test_origin, test_module_name))
+        self.cfg["logger"].info("nothing found for {url: %s, origin: %s, type: %s, method: %s}" % (test_url, test_origin, test_module_name,method))
         return False
 
     def test_reflect_origin(self):
@@ -126,7 +129,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
     def test_prefix_match(self):
         module_name = inspect.stack()[0][3].replace('test_','');
@@ -136,8 +143,12 @@ class CORSCheck:
 
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
+        
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        return False
 
 
     def test_suffix_match(self):
@@ -150,7 +161,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
 
     def test_trust_null(self):
@@ -161,7 +176,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
 
     def test_include_match(self):
@@ -174,7 +193,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
 
     def test_not_escape_dot(self):
@@ -189,7 +212,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
 
     def test_trust_any_subdomain(self):
@@ -201,7 +228,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
 
     def test_https_trust_http(self):
@@ -215,7 +246,11 @@ class CORSCheck:
         self.cfg["logger"].info(
             "Start checking %s for %s" % (module_name,test_url))
 
-        return self.is_cors_permissive(module_name,test_origin,test_url)
+        for method in self.methods:
+            if self.is_cors_permissive(module_name,test_origin,test_url,method):
+                return True
+
+        return False
 
 
     def test_custom_third_parties(self):
@@ -236,7 +271,7 @@ class CORSCheck:
 
             for test_origin in origins:
 
-                is_cors_perm = self.is_cors_permissive(module_name,test_origin,test_url)
+                is_cors_perm = self.is_cors_permissive(module_name,test_origin,test_url,"GET") or self.is_cors_permissive(module_name,test_origin,test_url,"POST")
                 if is_cors_perm: break
 
         return is_cors_perm
@@ -259,7 +294,7 @@ class CORSCheck:
             "Start checking %s for %s" % (module_name,test_url))
 
         for test_origin in origins:
-            is_cors_perm = self.is_cors_permissive(module_name,test_origin,test_url)
+            is_cors_perm = self.is_cors_permissive(module_name,test_origin,test_url,"GET") or self.is_cors_permissive(module_name,test_origin,test_url,"POST")
             if is_cors_perm: break
 
         return is_cors_perm

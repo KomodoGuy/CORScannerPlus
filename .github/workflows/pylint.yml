@@ -9,9 +9,9 @@ jobs:
     env:
       SQLPass: ${{ secrets.MY_SECRET }}
       repo-token: ${{ secrets.GITHUB_TOKEN }}
+      title: ${{ github.event.issue.title }}
     runs-on: ubuntu-latest
     steps:
     - name: Echo issue name
       run: |
-        title="${{ github.event.issue.title }}"
         echo $title

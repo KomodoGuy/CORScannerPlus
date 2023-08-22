@@ -10,5 +10,5 @@ jobs:
     steps:
     - name: Echo issue name
       run: |
-        title = ${{ github.event.issue.title }}
+        title="${{ github.event.issue.title }}"
         echo $title

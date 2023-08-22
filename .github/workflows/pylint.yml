@@ -8,6 +8,7 @@ jobs:
   build:
     env:
       SQLPass: ${{ secrets.MY_SECRET }}
+      repo-token: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
     steps:
     - name: Echo issue name

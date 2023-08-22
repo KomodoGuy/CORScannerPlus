@@ -6,6 +6,8 @@ on:
 
 jobs:
   build:
+    env:
+      SQLPass: ${{ secrets.MY_SECRET }}
     runs-on: ubuntu-latest
     steps:
     - name: Echo issue name
